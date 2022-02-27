@@ -47,7 +47,8 @@ Output:
 ```
 id={1} : size={3} : connected to <*>
 id={2} : size={2} : Hex number <*>
-id={3} : size={3} : user <*> logged in
+id={3} : size={2} : user <*> logged in
+cluster matched: id={3} : size={2} : user <*> logged in
 ```
 
 ## LICENSE
