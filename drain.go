@@ -111,7 +111,11 @@ type Drain struct {
 	clustersCounter int
 }
 
-func (d *Drain) Log(content string) *LogCluster {
+func (d *Drain) Clusters() []*LogCluster {
+	return d.idToCluster.Values()
+}
+
+func (d *Drain) Train(content string) *LogCluster {
 	contentTokens := d.getContentAsTokens(content)
 
 	matchCluster := d.treeSearch(d.rootNode, contentTokens, d.config.SimTh, false)
@@ -133,6 +137,13 @@ func (d *Drain) Log(content string) *LogCluster {
 		// Touch cluster to update its state in the cache.
 		d.idToCluster.Get(matchCluster.id)
 	}
+	return matchCluster
+}
+
+// Match against an already existing cluster. Match shall be perfect (sim_th=1.0). New cluster will not be created as a result of this call, nor any cluster modifications.
+func (d *Drain) Match(content string) *LogCluster {
+	contentTokens := d.getContentAsTokens(content)
+	matchCluster := d.treeSearch(d.rootNode, contentTokens, 1.0, true)
 	return matchCluster
 }
 
@@ -189,15 +200,8 @@ func (d *Drain) treeSearch(rootNode *Node, tokens []string, simTh float64, inclu
 	return cluster
 }
 
+// fastMatch Find the best match for a log message (represented as tokens) versus a list of clusters
 func (d *Drain) fastMatch(clusterIDs []int, tokens []string, simTh float64, includeParams bool) *LogCluster {
-	/*
-		Find the best match for a log message (represented as tokens) versus a list of clusters
-		:param cluster_ids: List of clusters to match against (represented by their IDs)
-		:param tokens: the log message, separated to tokens.
-		:param sim_th: minimum required similarity threshold (None will be returned in no clusters reached it)
-		:param include_params: consider tokens matched to wildcard parameters in similarity threshold.
-		:return: Best match cluster or None
-	*/
 	var matchCluster, maxCluster *LogCluster
 
 	maxSim := -1.0
@@ -342,8 +346,4 @@ func (d *Drain) createTemplate(seq1, seq2 []string) []string {
 		}
 	}
 	return retVal
-}
-
-func (d *Drain) Clusters() []*LogCluster {
-	return d.idToCluster.Values()
 }
